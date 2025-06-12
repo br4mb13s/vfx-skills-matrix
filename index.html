@@ -920,6 +920,157 @@
             return firstName + randomNumbers;
         }
 
+        function saveEmployeesList() {
+            try {
+                localStorage.setItem('vfxEmployeesList', JSON.stringify(employees));
+                console.log('Employees saved successfully');
+            } catch (error) {
+                console.log('Could not save employees list:', error);
+            }
+        }
+
+        function loadEmployeesList() {
+            try {
+                const saved = localStorage.getItem('vfxEmployeesList');
+                if (saved) {
+                    const loadedEmployees = JSON.parse(saved);
+                    console.log('Loaded employees from storage:', loadedEmployees);
+                    // Ensure all employees have passwords
+                    employees = loadedEmployees.map(emp => {
+                        if (!emp.password) {
+                            const firstName = emp.name.split(' ')[0];
+                            emp.password = generatePassword(firstName);
+                            console.log(`Generated password for ${emp.name}: ${emp.password}`);
+                        }
+                        return emp;
+                    });
+                    // Save back with passwords
+                    saveEmployeesList();
+                } else {
+                    console.log('No saved employees, using defaults');
+                    // Save default employees with passwords
+                    saveEmployeesList();
+                }
+            } catch (error) {
+                console.log('Could not load employees list:', error);
+            }
+        }
+
+        function saveAssessmentData() {
+            try {
+                localStorage.setItem('vfxSkillsAssessmentData', JSON.stringify(assessmentData));
+                console.log('Assessment data saved successfully');
+            } catch (error) {
+                console.log('localStorage not available, using session storage');
+                // Fallback to session storage or in-memory storage
+            }
+        }
+
+        function loadAssessmentData() {
+            try {
+                const saved = localStorage.getItem('vfxSkillsAssessmentData');
+                if (saved) {
+                    assessmentData = JSON.parse(saved);
+                    console.log('Loaded assessment data for:', Object.keys(assessmentData));
+                }
+            } catch (error) {
+                console.log('localStorage not available, starting fresh');
+                assessmentData = {};
+            }
+        }
+
+        function updateAnalytics() {
+            const totalEmployees = employees.length;
+            const completedAssessments = Object.keys(assessmentData).length;
+            const completionRate = totalEmployees > 0 ? Math.round((completedAssessments / totalEmployees) * 100) : 0;
+            
+            // Count expert skills and gaps
+            const allSkills = Object.values(skillsData).flat();
+            let expertCount = 0;
+            let gapsCount = 0;
+            
+            allSkills.forEach(skill => {
+                const ratings = employees.map(emp => 
+                    assessmentData[emp.name] && assessmentData[emp.name][skill] || 'not-assessed'
+                );
+                
+                const experts = ratings.filter(r => r === 'Expert').length;
+                const assessed = ratings.filter(r => r !== 'not-assessed').length;
+                
+                expertCount += experts;
+                if (experts === 0 && assessed > 0) {
+                    gapsCount++;
+                }
+            });
+            
+            // Update analytics display
+            const completionEl = document.getElementById('completionRate');
+            const totalEl = document.getElementById('totalAssessments');
+            const expertEl = document.getElementById('expertCount');
+            const gapsEl = document.getElementById('gapsCount');
+            
+            if (completionEl) completionEl.textContent = completionRate + '%';
+            if (totalEl) totalEl.textContent = completedAssessments;
+            if (expertEl) expertEl.textContent = expertCount;
+            if (gapsEl) gapsEl.textContent = gapsCount;
+        }
+
+        function addNewEmployee() {
+            console.log('Adding new employee...');
+            const nameInput = document.getElementById('newEmployeeName');
+            const roleInput = document.getElementById('newEmployeeRole');
+            
+            if (!nameInput || !roleInput) {
+                console.error('Form inputs not found');
+                showNotification('Form error - please refresh the page');
+                return;
+            }
+            
+            const name = nameInput.value.trim();
+            const role = roleInput.value;
+            
+            console.log('Name:', name, 'Role:', role);
+            
+            if (!name || !role) {
+                showNotification('Please enter both name and role');
+                return;
+            }
+            
+            // Check if employee already exists
+            if (employees.find(emp => emp.name.toLowerCase() === name.toLowerCase())) {
+                showNotification('Employee already exists');
+                return;
+            }
+            
+            // Generate password (first name + 4 random numbers)
+            const firstName = name.split(' ')[0];
+            const password = generatePassword(firstName);
+            
+            console.log('Generated password:', password);
+            
+            // Add new employee
+            const newEmployee = { name, role, password };
+            employees.push(newEmployee);
+            
+            console.log('Updated employees array:', employees);
+            
+            // Save employees list
+            saveEmployeesList();
+            
+            // Clear form
+            nameInput.value = '';
+            roleInput.value = '';
+            
+            // Refresh displays
+            populateEmployeeGrid();
+            if (supervisorAccess) {
+                populateOverview();
+                updateAnalytics();
+            }
+            
+            showNotification(`${name} added successfully! Password: ${password}`);
+        }
+
         function requestSupervisorAccess() {
             if (supervisorAccess) {
                 showView('overview');
