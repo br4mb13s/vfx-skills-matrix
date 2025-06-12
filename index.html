@@ -1032,13 +1032,23 @@
 
         // Initialize the application
         function initializeApp() {
+            console.log('Initializing app...');
+            console.log('Default employees:', employees);
+            
             loadEmployeesList();
+            console.log('After loading employees:', employees);
+            
             loadAssessmentData();
             checkExistingSessions();
-            populateEmployeeGrid();
+            
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                populateEmployeeGrid();
+            }, 100);
         }
 
         function populateEmployeeGrid() {
+            console.log('Populating employee grid with:', employees);
             const grid = document.getElementById('employeeGrid');
             
             if (!employees || employees.length === 0) {
@@ -1048,7 +1058,8 @@
             
             grid.innerHTML = '';
 
-            employees.forEach(employee => {
+            employees.forEach((employee, index) => {
+                console.log(`Creating card for employee ${index}:`, employee);
                 const completion = getCompletionStatus(employee.name);
                 const card = document.createElement('div');
                 card.className = 'employee-card';
@@ -1062,6 +1073,8 @@
                 
                 grid.appendChild(card);
             });
+            
+            console.log(`Employee grid populated with ${employees.length} employees`);
         }
 
         async function handleEmployeeSelection(employeeName, employeeRole) {
