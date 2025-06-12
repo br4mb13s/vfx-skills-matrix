@@ -530,6 +530,25 @@
             font-size: 0.9em;
             font-weight: 600;
             z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
         .analytics-grid {
@@ -844,7 +863,8 @@
 
     <!-- Session info -->
     <div id="sessionInfo" class="session-info" style="display: none;">
-        Logged in as: <span id="sessionUser"></span>
+        <span>Logged in as: <span id="sessionUser"></span></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <script>
@@ -1156,11 +1176,37 @@
             }
         }
 
+        function logout() {
+            // Clear all sessions
+            supervisorAccess = false;
+            userSession = null;
+            
+            // Clear session storage
+            sessionStorage.removeItem('supervisorSession');
+            sessionStorage.removeItem('userSession');
+            
+            // Hide supervisor buttons
+            document.querySelectorAll('.supervisor-only').forEach(el => {
+                el.classList.remove('visible');
+            });
+            
+            // Hide session info
+            document.getElementById('sessionInfo').style.display = 'none';
+            
+            // Go back to home
+            showView('home');
+            
+            // Show notification
+            showNotification('Logged out successfully');
+            
+            console.log('User logged out');
+        }
+
         function updateSessionInfo(user) {
             const sessionInfo = document.getElementById('sessionInfo');
             const sessionUser = document.getElementById('sessionUser');
             sessionUser.textContent = user;
-            sessionInfo.style.display = 'block';
+            sessionInfo.style.display = 'flex';
         }
 
         function checkExistingSessions() {
@@ -1229,6 +1275,12 @@
         }
 
         async function handleEmployeeSelection(employeeName, employeeRole) {
+            // Don't allow employee login if supervisor is logged in
+            if (supervisorAccess) {
+                showNotification('Please logout of supervisor mode first to access employee assessments');
+                return;
+            }
+            
             try {
                 // Check if user is already logged in as this employee
                 if (userSession === employeeName) {
