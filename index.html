@@ -957,7 +957,7 @@
                     console.log('Loaded employees from storage:', loadedEmployees);
                     // Ensure all employees have passwords
                     employees = loadedEmployees.map(emp => {
-                        if (!emp.password) {
+                        if (!emp.password || emp.password === 'undefined') {
                             const firstName = emp.name.split(' ')[0];
                             emp.password = generatePassword(firstName);
                             console.log(`Generated password for ${emp.name}: ${emp.password}`);
@@ -968,11 +968,15 @@
                     saveEmployeesList();
                 } else {
                     console.log('No saved employees, using defaults');
+                    // Ensure default employees have proper passwords
+                    ensurePasswordsExist();
                     // Save default employees with passwords
                     saveEmployeesList();
                 }
             } catch (error) {
                 console.log('Could not load employees list:', error);
+                // Fallback to defaults with password check
+                ensurePasswordsExist();
             }
         }
 
@@ -992,11 +996,121 @@
                 if (saved) {
                     assessmentData = JSON.parse(saved);
                     console.log('Loaded assessment data for:', Object.keys(assessmentData));
+                } else {
+                    // Add test data for demonstration
+                    addTestData();
                 }
             } catch (error) {
-                console.log('localStorage not available, starting fresh');
-                assessmentData = {};
+                console.log('localStorage not available, using test data');
+                addTestData();
             }
+        }
+
+        function addTestData() {
+            console.log('Adding test assessment data...');
+            
+            // Chris Barischoff - Senior CG Supervisor with strong technical skills
+            assessmentData["Chris Barischoff"] = {
+                "Modeling & Sculpting": "Advanced",
+                "Texturing & Materials": "Expert",
+                "Rigging & Character Setup": "Intermediate",
+                "Animation": "Intermediate",
+                "VFX & Simulation": "Expert",
+                "Lighting & Shading": "Expert",
+                "Compositing": "Advanced",
+                "Maya": "Expert",
+                "Houdini": "Expert",
+                "Nuke": "Advanced",
+                "Unreal Engine": "Intermediate",
+                "Blender": "Intermediate",
+                "Arnold": "Expert",
+                "RenderMan": "Advanced",
+                "Team Leadership": "Expert",
+                "Project Management": "Advanced",
+                "Mentoring & Training": "Expert",
+                "Client Communication": "Advanced",
+                "Python Scripting": "Advanced",
+                "Pipeline Development": "Intermediate"
+            };
+
+            // Ila - Strong in compositing and lighting
+            assessmentData["Ila"] = {
+                "Modeling & Sculpting": "Intermediate",
+                "Texturing & Materials": "Advanced",
+                "Rigging & Character Setup": "Beginner",
+                "Animation": "Advanced",
+                "VFX & Simulation": "Advanced",
+                "Lighting & Shading": "Expert",
+                "Compositing": "Expert",
+                "Maya": "Expert",
+                "Houdini": "Intermediate",
+                "Nuke": "Expert",
+                "Unreal Engine": "Beginner",
+                "Katana": "Expert",
+                "Arnold": "Expert",
+                "Cycles": "Advanced",
+                "Team Leadership": "Advanced",
+                "Mentoring & Training": "Advanced",
+                "Client Communication": "Intermediate"
+            };
+
+            // Nick Chong - Modeling specialist
+            assessmentData["Nick Chong"] = {
+                "Modeling & Sculpting": "Expert",
+                "Texturing & Materials": "Advanced",
+                "Rigging & Character Setup": "Intermediate",
+                "Animation": "Beginner",
+                "VFX & Simulation": "Intermediate",
+                "Lighting & Shading": "Advanced",
+                "Compositing": "Intermediate",
+                "Maya": "Expert",
+                "Houdini": "Intermediate",
+                "Nuke": "Intermediate",
+                "Blender": "Expert",
+                "Arnold": "Advanced",
+                "Team Leadership": "Intermediate",
+                "Project Management": "Intermediate",
+                "Python Scripting": "Beginner"
+            };
+
+            // Rob Lodermeier - Animation Supervisor
+            assessmentData["Rob Lodermeier"] = {
+                "Modeling & Sculpting": "Beginner",
+                "Texturing & Materials": "Beginner",
+                "Rigging & Character Setup": "Advanced",
+                "Animation": "Expert",
+                "VFX & Simulation": "Beginner",
+                "Lighting & Shading": "Beginner",
+                "Compositing": "Beginner",
+                "Maya": "Expert",
+                "Houdini": "Beginner",
+                "Nuke": "Beginner",
+                "Unreal Engine": "Advanced",
+                "Team Leadership": "Expert",
+                "Project Management": "Advanced",
+                "Mentoring & Training": "Expert",
+                "Client Communication": "Advanced",
+                "MEL Scripting": "Advanced"
+            };
+
+            // John Saleem - Asset Supervisor (partial completion for testing)
+            assessmentData["John Saleem"] = {
+                "Modeling & Sculpting": "Expert",
+                "Texturing & Materials": "Expert",
+                "Rigging & Character Setup": "Intermediate",
+                "Maya": "Expert",
+                "Houdini": "Advanced",
+                "Blender": "Advanced",
+                "Arnold": "Expert",
+                "Team Leadership": "Advanced",
+                "Project Management": "Expert"
+                // Intentionally incomplete to show partial progress
+            };
+
+            console.log('Test data added for:', Object.keys(assessmentData));
+            
+            // Save the test data
+            saveAssessmentData();
         }
 
         function updateAnalytics() {
@@ -1121,6 +1235,8 @@
                     return;
                 }
 
+                console.log('Employee login request for:', employee);
+
                 // Create password modal
                 const overlay = document.createElement('div');
                 overlay.className = 'password-overlay';
@@ -1129,7 +1245,7 @@
                     <div class="password-modal">
                         <h3>Welcome ${employee.name}</h3>
                         <div class="password-hint">
-                            <strong>Your password is:</strong> ${employee.password}
+                            <strong>Your password is:</strong> ${employee.password || 'Password not set'}
                         </div>
                         <input type="password" id="userPassword" placeholder="Enter your password" maxlength="20">
                         <div>
@@ -1231,6 +1347,9 @@
         function initializeApp() {
             console.log('Initializing app...');
             console.log('Default employees:', employees);
+            
+            // Ensure passwords exist before loading
+            ensurePasswordsExist();
             
             loadEmployeesList();
             console.log('After loading employees:', employees);
