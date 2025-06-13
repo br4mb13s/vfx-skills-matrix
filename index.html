@@ -966,14 +966,15 @@
                 if (saved) {
                     const loadedEmployees = JSON.parse(saved);
                     console.log('Loaded employees from storage:', loadedEmployees);
-                    // Ensure all employees have passwords
-                    employees = loadedEmployees.map(emp => {
+                    // Clear the array and add loaded employees
+                    employees.length = 0;
+                    loadedEmployees.forEach(emp => {
                         if (!emp.password || emp.password === 'undefined') {
                             const firstName = emp.name.split(' ')[0];
                             emp.password = generatePassword(firstName);
                             console.log(`Generated password for ${emp.name}: ${emp.password}`);
                         }
-                        return emp;
+                        employees.push(emp);
                     });
                     // Save back with passwords
                     saveEmployeesList();
