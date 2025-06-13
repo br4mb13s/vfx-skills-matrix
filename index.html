@@ -1487,17 +1487,17 @@
         }
 
         // Initialize the application
-        function initializeApp() {
+        async function initializeApp() {
             console.log('Initializing app...');
             console.log('Default employees:', employees);
             
             // Ensure passwords exist before loading
             ensurePasswordsExist();
             
-            loadEmployeesList();
+            await loadEmployeesList();
             console.log('After loading employees:', employees);
             
-            loadAssessmentData();
+            await loadAssessmentData();
             checkExistingSessions();
             
             // Small delay to ensure DOM is ready
