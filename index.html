@@ -940,17 +940,6 @@
             return firstName + randomNumbers;
         }
 
-        // Ensure passwords are always set
-        function ensurePasswordsExist() {
-            employees.forEach(emp => {
-                if (!emp.password || emp.password === 'undefined') {
-                    const firstName = emp.name.split(' ')[0];
-                    emp.password = generatePassword(firstName);
-                    console.log(`Fixed password for ${emp.name}: ${emp.password}`);
-                }
-            });
-        }
-
         function saveEmployeesList() {
             try {
                 localStorage.setItem('vfxEmployeesList', JSON.stringify(employees));
