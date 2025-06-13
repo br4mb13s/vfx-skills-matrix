@@ -1491,8 +1491,7 @@
             console.log('Initializing app...');
             console.log('Default employees:', employees);
             
-            // Initialize Firebase first
-            const firebaseReady = initializeFirebase();
+            // Check Firebase status (already initialized at script load)
             if (firebaseReady) {
                 console.log('Firebase ready for use');
             } else {
