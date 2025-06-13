@@ -740,30 +740,96 @@
                 
                 <!-- Add New Employee Section -->
                 <div class="add-employee-section">
-                    <h3 style="margin-bottom: 20px; color: #2c3e50;">Add New Team Member</h3>
-                    <div class="add-employee-form">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="newEmployeeName" placeholder="Enter full name">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50;">Team Management</h3>
+                    
+                    <!-- Add Individual Employee -->
+                    <div style="margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #dee2e6;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">Add Individual Team Member</h4>
+                        <div class="add-employee-form">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="newEmployeeName" placeholder="Enter full name">
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="newEmployeeRole">
+                                    <option value="">Select Role</option>
+                                    <option value="Junior Artist">Junior Artist</option>
+                                    <option value="Artist">Artist</option>
+                                    <option value="Senior Artist">Senior Artist</option>
+                                    <option value="Lead Artist">Lead Artist</option>
+                                    <option value="Supervisor">Supervisor</option>
+                                    <option value="CG Supervisor">CG Supervisor</option>
+                                    <option value="VFX Supervisor">VFX Supervisor</option>
+                                    <option value="Asset Supervisor">Asset Supervisor</option>
+                                    <option value="Anim Supervisor">Anim Supervisor</option>
+                                    <option value="Comp Supervisor">Comp Supervisor</option>
+                                    <option value="Frontend CG Supervisor">Frontend CG Supervisor</option>
+                                </select>
+                            </div>
+                            <button class="add-btn" onclick="addNewEmployee()">Add Team Member</button>
                         </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <select id="newEmployeeRole">
-                                <option value="">Select Role</option>
-                                <option value="Junior Artist">Junior Artist</option>
-                                <option value="Artist">Artist</option>
-                                <option value="Senior Artist">Senior Artist</option>
-                                <option value="Lead Artist">Lead Artist</option>
-                                <option value="Supervisor">Supervisor</option>
-                                <option value="CG Supervisor">CG Supervisor</option>
-                                <option value="VFX Supervisor">VFX Supervisor</option>
-                                <option value="Asset Supervisor">Asset Supervisor</option>
-                                <option value="Anim Supervisor">Anim Supervisor</option>
-                                <option value="Comp Supervisor">Comp Supervisor</option>
-                                <option value="Frontend CG Supervisor">Frontend CG Supervisor</option>
-                            </select>
+                    </div>
+                    
+                    <!-- Bulk Import/Export -->
+                    <div>
+                        <h4 style="margin-bottom: 15px; color: #495057;">Bulk Employee Management</h4>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                            <button class="export-btn" onclick="exportEmployees()">Export All Employees</button>
+                            <button class="export-btn" style="background: linear-gradient(135deg, #28a745, #20c997);" onclick="exportEmployeeTemplate()">Download Template</button>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="file" id="employeeImportFile" accept=".csv,.json" style="display: none;" onchange="importEmployees(event)">
+                                <button class="export-btn" style="background: linear-gradient(135deg, #6f42c1, #8b5cf6);" onclick="document.getElementById('employeeImportFile').click()">Import Employees</button>
+                            </div>
                         </div>
-                        <button class="add-btn" onclick="addNewEmployee()">Add Team Member</button>
+                        <p style="margin-top: 10px; font-size: 0.85em; color: #6c757d;">
+                            Supports CSV or JSON format. CSV columns: Name, Role, Password (optional)
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Skills Management Section -->
+                <div class="add-employee-section" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50;">Skills Management</h3>
+                    
+                    <!-- Add New Skill -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">Add New Skill</h4>
+                        <div class="add-employee-form">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="skillCategory">
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>New Skill Name</label>
+                                <input type="text" id="newSkillName" placeholder="Enter skill name">
+                            </div>
+                            <button class="add-btn" onclick="addNewSkill()">Add Skill</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Add New Category -->
+                    <div style="padding-top: 25px; border-top: 1px solid #dee2e6;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">Add New Category</h4>
+                        <div class="add-employee-form">
+                            <div class="form-group">
+                                <label>Category Name</label>
+                                <input type="text" id="newCategoryName" placeholder="Enter category name (e.g., 'AI TOOLS')">
+                            </div>
+                            <button class="add-btn" style="background: linear-gradient(135deg, #dc3545, #fd7e14);" onclick="addNewCategory()">Add Category</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Export/Import Skills -->
+                    <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #dee2e6;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">Skills Import/Export</h4>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button class="export-btn" onclick="exportSkills()">Export Skills Structure</button>
+                            <input type="file" id="skillsImportFile" accept=".json" style="display: none;" onchange="importSkills(event)">
+                            <button class="export-btn" style="background: linear-gradient(135deg, #6f42c1, #8b5cf6);" onclick="document.getElementById('skillsImportFile').click()">Import Skills</button>
+                        </div>
                     </div>
                 </div>
 
@@ -847,7 +913,7 @@
 
     <script>
         // Sample skills data structure
-        const skillsData = {
+        let skillsData = {
             "TECHNICAL SKILLS": [
                 "Modeling & Sculpting",
                 "Texturing & Materials", 
@@ -1345,6 +1411,9 @@
             console.log('Initializing app...');
             console.log('Default employees:', employees);
             
+            // Load skills first
+            loadSkillsData();
+            
             // Ensure passwords exist before loading
             ensurePasswordsExist();
             
@@ -1357,6 +1426,7 @@
             // Small delay to ensure DOM is ready
             setTimeout(() => {
                 populateEmployeeGrid();
+                updateSkillCategoryDropdown();
             }, 100);
         }
 
@@ -1582,6 +1652,32 @@
             if (viewName === 'overview') {
                 populateOverview();
                 updateAnalytics();
+                updateCategoryFilterDropdown();
+            }
+        }
+
+        function updateCategoryFilterDropdown() {
+            const dropdown = document.getElementById('categoryFilter');
+            if (!dropdown) return;
+            
+            // Store current value
+            const currentValue = dropdown.value;
+            
+            // Clear and rebuild options
+            dropdown.innerHTML = '<option value="all">All Categories</option>';
+            
+            // Add dynamic categories
+            Object.keys(skillsData).forEach(category => {
+                const option = document.createElement('option');
+                const simplifiedValue = category.toLowerCase().replace(/[^a-z]/g, '');
+                option.value = simplifiedValue;
+                option.textContent = category;
+                dropdown.appendChild(option);
+            });
+            
+            // Restore previous selection if still valid
+            if (currentValue && Array.from(dropdown.options).some(opt => opt.value === currentValue)) {
+                dropdown.value = currentValue;
             }
         }
 
@@ -1652,8 +1748,10 @@
                 let showRow = true;
                 
                 if (categoryFilter !== 'all') {
-                    const category = row.dataset.category.toLowerCase();
-                    showRow = category.includes(categoryFilter.toLowerCase());
+                    const category = row.dataset.category;
+                    const simplifiedFilter = categoryFilter.toLowerCase();
+                    const simplifiedCategory = category.toLowerCase().replace(/[^a-z]/g, '');
+                    showRow = simplifiedCategory.includes(simplifiedFilter) || category.toLowerCase().includes(simplifiedFilter);
                 }
                 
                 if (skillLevelFilter !== 'all' && showRow) {
@@ -2062,6 +2160,313 @@
                     }
                 }, 300);
             }, 3000);
+        }
+
+        // Skills Management Functions
+        function loadSkillsData() {
+            try {
+                const saved = localStorage.getItem('vfxSkillsStructure');
+                if (saved) {
+                    const loadedSkills = JSON.parse(saved);
+                    console.log('Loaded skills structure from localStorage');
+                    skillsData = loadedSkills;
+                } else {
+                    console.log('Using default skills structure');
+                    saveSkillsData();
+                }
+            } catch (error) {
+                console.error('Could not load skills structure:', error);
+            }
+        }
+
+        function saveSkillsData() {
+            try {
+                localStorage.setItem('vfxSkillsStructure', JSON.stringify(skillsData));
+                console.log('Skills structure saved');
+            } catch (error) {
+                console.error('Could not save skills structure:', error);
+            }
+        }
+
+        function updateSkillCategoryDropdown() {
+            const dropdown = document.getElementById('skillCategory');
+            if (!dropdown) return;
+            
+            dropdown.innerHTML = '<option value="">Select Category</option>';
+            Object.keys(skillsData).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                dropdown.appendChild(option);
+            });
+        }
+
+        function addNewSkill() {
+            const categorySelect = document.getElementById('skillCategory');
+            const skillInput = document.getElementById('newSkillName');
+            
+            const category = categorySelect.value;
+            const skillName = skillInput.value.trim();
+            
+            if (!category || !skillName) {
+                showNotification('Please select a category and enter a skill name');
+                return;
+            }
+            
+            // Check if skill already exists in this category
+            if (skillsData[category].includes(skillName)) {
+                showNotification('This skill already exists in the selected category');
+                return;
+            }
+            
+            // Add the skill
+            skillsData[category].push(skillName);
+            saveSkillsData();
+            
+            // Clear form
+            skillInput.value = '';
+            
+            // Update any active views
+            if (currentEmployee) {
+                populateAssessmentForm();
+                loadCurrentRatings();
+            }
+            
+            if (supervisorAccess) {
+                populateOverview();
+            }
+            
+            showNotification(`Added "${skillName}" to ${category}`);
+        }
+
+        function addNewCategory() {
+            const categoryInput = document.getElementById('newCategoryName');
+            const categoryName = categoryInput.value.trim().toUpperCase();
+            
+            if (!categoryName) {
+                showNotification('Please enter a category name');
+                return;
+            }
+            
+            if (skillsData[categoryName]) {
+                showNotification('This category already exists');
+                return;
+            }
+            
+            // Add new category with empty skills array
+            skillsData[categoryName] = [];
+            saveSkillsData();
+            
+            // Clear form and update dropdown
+            categoryInput.value = '';
+            updateSkillCategoryDropdown();
+            
+            showNotification(`Added new category: ${categoryName}`);
+        }
+
+        function exportSkills() {
+            const skillsExport = JSON.stringify(skillsData, null, 2);
+            const blob = new Blob([skillsExport], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'skills_structure_' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Skills structure exported successfully!');
+        }
+
+        function importSkills(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedSkills = JSON.parse(e.target.result);
+                    
+                    // Validate structure
+                    if (typeof importedSkills !== 'object') {
+                        throw new Error('Invalid skills structure');
+                    }
+                    
+                    // Confirm import
+                    const totalCategories = Object.keys(importedSkills).length;
+                    const totalSkills = Object.values(importedSkills).flat().length;
+                    
+                    if (confirm(`Import ${totalCategories} categories with ${totalSkills} total skills? This will replace current skills structure.`)) {
+                        skillsData = importedSkills;
+                        saveSkillsData();
+                        updateSkillCategoryDropdown();
+                        
+                        // Refresh current views
+                        if (currentEmployee) {
+                            populateAssessmentForm();
+                            loadCurrentRatings();
+                        }
+                        
+                        if (supervisorAccess) {
+                            populateOverview();
+                        }
+                        
+                        showNotification('Skills imported successfully!');
+                    }
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showNotification('Failed to import skills: Invalid file format');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Employee Bulk Management Functions
+        function exportEmployees() {
+            // Create CSV content
+            let csv = ['Name,Role,Password'];
+            
+            employees.forEach(emp => {
+                csv.push(`"${emp.name}","${emp.role}","${emp.password || ''}"`);
+            });
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'employees_export_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Employees exported successfully!');
+        }
+
+        function exportEmployeeTemplate() {
+            const template = 'Name,Role,Password\n"John Doe","CG Supervisor",""\n"Jane Smith","Lead Artist",""\n"Bob Johnson","Senior Artist",""';
+            
+            const blob = new Blob([template], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'employees_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Template downloaded! Fill it out and import.');
+        }
+
+        function importEmployees(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            if (file.name.endsWith('.json')) {
+                reader.onload = function(e) {
+                    try {
+                        const importedEmployees = JSON.parse(e.target.result);
+                        processImportedEmployees(importedEmployees);
+                    } catch (error) {
+                        console.error('JSON import error:', error);
+                        showNotification('Failed to import: Invalid JSON format');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                // CSV import
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    
+                    if (!headers.includes('Name') || !headers.includes('Role')) {
+                        showNotification('CSV must have Name and Role columns');
+                        return;
+                    }
+                    
+                    const nameIndex = headers.indexOf('Name');
+                    const roleIndex = headers.indexOf('Role');
+                    const passwordIndex = headers.indexOf('Password');
+                    
+                    const importedEmployees = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        // Parse CSV line (handle quoted values)
+                        const values = line.match(/(".*?"|[^,]+)/g) || [];
+                        const cleanValues = values.map(v => v.trim().replace(/^"|"$/g, ''));
+                        
+                        const name = cleanValues[nameIndex];
+                        const role = cleanValues[roleIndex];
+                        const password = passwordIndex >= 0 ? cleanValues[passwordIndex] : '';
+                        
+                        if (name && role) {
+                            importedEmployees.push({ name, role, password });
+                        }
+                    }
+                    
+                    processImportedEmployees(importedEmployees);
+                };
+                reader.readAsText(file);
+            }
+            
+            event.target.value = ''; // Reset file input
+        }
+
+        function processImportedEmployees(importedEmployees) {
+            if (!Array.isArray(importedEmployees) || importedEmployees.length === 0) {
+                showNotification('No valid employees found in file');
+                return;
+            }
+            
+            let added = 0;
+            let updated = 0;
+            
+            importedEmployees.forEach(emp => {
+                if (!emp.name || !emp.role) return;
+                
+                const existingIndex = employees.findIndex(e => 
+                    e.name.toLowerCase() === emp.name.toLowerCase()
+                );
+                
+                if (existingIndex >= 0) {
+                    // Update existing employee
+                    employees[existingIndex].role = emp.role;
+                    if (emp.password) {
+                        employees[existingIndex].password = emp.password;
+                    }
+                    updated++;
+                } else {
+                    // Add new employee
+                    const newEmployee = {
+                        name: emp.name,
+                        role: emp.role,
+                        password: emp.password || generatePassword(emp.name.split(' ')[0])
+                    };
+                    employees.push(newEmployee);
+                    added++;
+                }
+            });
+            
+            saveEmployeesList();
+            populateEmployeeGrid();
+            
+            if (supervisorAccess) {
+                populateOverview();
+                updateAnalytics();
+            }
+            
+            showNotification(`Import complete! Added: ${added}, Updated: ${updated}`);
         }
 
         // Initialize the application when page loads
