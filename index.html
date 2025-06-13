@@ -1491,13 +1491,6 @@
             console.log('Initializing app...');
             console.log('Default employees:', employees);
             
-            // Check Firebase status (already initialized at script load)
-            if (firebaseReady) {
-                console.log('Firebase ready for use');
-            } else {
-                console.log('Firebase not available, using local storage only');
-            }
-            
             // Ensure passwords exist before loading
             ensurePasswordsExist();
             
