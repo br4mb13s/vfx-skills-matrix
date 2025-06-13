@@ -953,20 +953,73 @@
 
         function saveEmployeesList() {
             try {
+                // Save to localStorage first
                 localStorage.setItem('vfxEmployeesList', JSON.stringify(employees));
-                console.log('Employees saved successfully');
+                console.log('Employees saved locally');
+                
+                // Save to Firebase (shared across all users)
+                database.ref('employees').set(employees)
+                    .then(() => {
+                        console.log('Employees synced to Firebase');
+                    })
+                    .catch((error) => {
+                        console.error('Firebase employees save error:', error);
+                    });
+                    
             } catch (error) {
-                console.log('Could not save employees list:', error);
+                console.log('Could not save employees list locally:', error);
+                
+                // Try Firebase only
+                database.ref('employees').set(employees)
+                    .then(() => {
+                        console.log('Employees saved to Firebase only');
+                    })
+                    .catch((fbError) => {
+                        console.error('Failed to save employees anywhere:', fbError);
+                    });
             }
         }
 
         function loadEmployeesList() {
+            // Try to load from Firebase first
+            database.ref('employees').once('value')
+                .then((snapshot) => {
+                    const firebaseEmployees = snapshot.val();
+                    if (firebaseEmployees && firebaseEmployees.length > 0) {
+                        console.log('Loaded employees from Firebase:', firebaseEmployees);
+                        
+                        // Clear current employees and add loaded ones
+                        employees.length = 0;
+                        firebaseEmployees.forEach(emp => {
+                            if (!emp.password || emp.password === 'undefined') {
+                                const firstName = emp.name.split(' ')[0];
+                                emp.password = generatePassword(firstName);
+                                console.log(`Generated password for ${emp.name}: ${emp.password}`);
+                            }
+                            employees.push(emp);
+                        });
+                        
+                        // Save back to both Firebase and localStorage
+                        saveEmployeesList();
+                    } else {
+                        console.log('No Firebase employees found, using defaults');
+                        loadEmployeesFromLocal();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Firebase employees load error:', error);
+                    console.log('Falling back to local employees');
+                    loadEmployeesFromLocal();
+                });
+        }
+        
+        function loadEmployeesFromLocal() {
             try {
                 const saved = localStorage.getItem('vfxEmployeesList');
                 if (saved) {
                     const loadedEmployees = JSON.parse(saved);
-                    console.log('Loaded employees from storage:', loadedEmployees);
-                    // Clear the array and add loaded employees
+                    console.log('Loaded employees from localStorage:', loadedEmployees);
+                    
                     employees.length = 0;
                     loadedEmployees.forEach(emp => {
                         if (!emp.password || emp.password === 'undefined') {
@@ -976,44 +1029,97 @@
                         }
                         employees.push(emp);
                     });
-                    // Save back with passwords
+                    
                     saveEmployeesList();
                 } else {
                     console.log('No saved employees, using defaults');
-                    // Ensure default employees have proper passwords
                     ensurePasswordsExist();
-                    // Save default employees with passwords
                     saveEmployeesList();
                 }
             } catch (error) {
                 console.log('Could not load employees list:', error);
-                // Fallback to defaults with password check
                 ensurePasswordsExist();
             }
         }
 
         function saveAssessmentData() {
             try {
+                // Save to localStorage first (immediate feedback)
                 localStorage.setItem('vfxSkillsAssessmentData', JSON.stringify(assessmentData));
-                console.log('Assessment data saved successfully');
+                console.log('Assessment data saved locally');
+                
+                // Save to Firebase (shared across all users)
+                database.ref('assessmentData').set(assessmentData)
+                    .then(() => {
+                        console.log('Assessment data synced to Firebase');
+                        showNotification('✓ Assessment saved and synced to team');
+                    })
+                    .catch((error) => {
+                        console.error('Firebase save error:', error);
+                        showNotification('⚠ Saved locally, sync failed');
+                    });
+                    
             } catch (error) {
-                console.log('localStorage not available, using session storage');
-                // Fallback to session storage or in-memory storage
+                console.log('localStorage not available:', error);
+                
+                // Try Firebase only if localStorage fails
+                database.ref('assessmentData').set(assessmentData)
+                    .then(() => {
+                        console.log('Assessment data saved to Firebase only');
+                        showNotification('✓ Assessment synced to team');
+                    })
+                    .catch((fbError) => {
+                        console.error('Both localStorage and Firebase failed:', fbError);
+                        showNotification('❌ Failed to save assessment data');
+                    });
             }
         }
 
         function loadAssessmentData() {
+            // Try to load from Firebase first (most up-to-date)
+            database.ref('assessmentData').once('value')
+                .then((snapshot) => {
+                    const firebaseData = snapshot.val();
+                    if (firebaseData) {
+                        assessmentData = firebaseData;
+                        console.log('Loaded assessment data from Firebase:', Object.keys(assessmentData));
+                        
+                        // Also save to localStorage for offline access
+                        try {
+                            localStorage.setItem('vfxSkillsAssessmentData', JSON.stringify(assessmentData));
+                        } catch (e) {
+                            console.log('Could not save to localStorage');
+                        }
+                        
+                        // Update UI if needed
+                        if (supervisorAccess) {
+                            updateAnalytics();
+                        }
+                    } else {
+                        console.log('No Firebase data found, checking localStorage');
+                        loadFromLocalStorage();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Firebase load error:', error);
+                    console.log('Falling back to localStorage');
+                    loadFromLocalStorage();
+                });
+        }
+        
+        function loadFromLocalStorage() {
             try {
                 const saved = localStorage.getItem('vfxSkillsAssessmentData');
                 if (saved) {
                     assessmentData = JSON.parse(saved);
-                    console.log('Loaded assessment data for:', Object.keys(assessmentData));
+                    console.log('Loaded assessment data from localStorage:', Object.keys(assessmentData));
                 } else {
-                    // Add test data for demonstration
+                    console.log('No local data found, adding test data');
                     addTestData();
                 }
             } catch (error) {
-                console.log('localStorage not available, using test data');
+                console.log('localStorage not available, starting with fresh data');
+                assessmentData = {};
                 addTestData();
             }
         }
