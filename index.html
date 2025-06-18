@@ -2469,8 +2469,361 @@
             showNotification(`Import complete! Added: ${added}, Updated: ${updated}`);
         }
 
+        // Google Sheets Configuration - REPLACE THESE VALUES!
+        const SHEET_CONFIG = {
+            spreadsheetId: '1kKMRLcdssEYlN6-5IpxBzStlxeeycCcopfPpY2ClA7I', // Your spreadsheet ID
+            clientId: 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com', // ⚠️ REPLACE THIS!
+            apiKey: 'YOUR_API_KEY_HERE', // ⚠️ REPLACE THIS!
+            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            scopes: 'https://www.googleapis.com/auth/spreadsheets'
+        };
+
+        // Google Sheets Integration Module
+        const GoogleSheetsDB = {
+            isInitialized: false,
+            isSignedIn: false,
+            
+            // Initialize Google API
+            init: async function() {
+                return new Promise((resolve, reject) => {
+                    gapi.load('client:auth2', async () => {
+                        try {
+                            await gapi.client.init({
+                                apiKey: SHEET_CONFIG.apiKey,
+                                clientId: SHEET_CONFIG.clientId,
+                                discoveryDocs: SHEET_CONFIG.discoveryDocs,
+                                scope: SHEET_CONFIG.scopes
+                            });
+                            
+                            // Listen for sign-in state changes
+                            gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
+                                this.isSignedIn = isSignedIn;
+                                this.updateSignInStatus();
+                            });
+                            
+                            // Handle initial sign-in state
+                            this.isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+                            this.updateSignInStatus();
+                            
+                            this.isInitialized = true;
+                            console.log('Google Sheets API initialized');
+                            resolve();
+                        } catch (error) {
+                            console.error('Error initializing Google API:', error);
+                            reject(error);
+                        }
+                    });
+                });
+            },
+            
+            // Update UI based on sign-in status
+            updateSignInStatus: function() {
+                const signInBtn = document.getElementById('googleSignInBtn');
+                if (signInBtn) {
+                    signInBtn.textContent = this.isSignedIn ? 'Sync: ON ✓' : 'Enable Sync';
+                    signInBtn.style.background = this.isSignedIn ? '#34a853' : '#4285f4';
+                    if (this.isSignedIn) {
+                        showNotification('Connected to Google Sheets - Data will sync automatically');
+                        // Load data from Sheets
+                        loadEmployeesFromSheets();
+                        loadAssessmentsFromSheets();
+                    }
+                }
+            },
+            
+            // Sign in to Google
+            signIn: function() {
+                if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                    gapi.auth2.getAuthInstance().signIn();
+                }
+            },
+            
+            // Sign out from Google
+            signOut: function() {
+                if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                    gapi.auth2.getAuthInstance().signOut();
+                }
+            },
+            
+            // Read data from a sheet
+            readSheet: async function(range) {
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: SHEET_CONFIG.spreadsheetId,
+                        range: range
+                    });
+                    return response.result.values || [];
+                } catch (error) {
+                    console.error('Error reading sheet:', error);
+                    return [];
+                }
+            },
+            
+            // Write data to a sheet
+            writeSheet: async function(range, values) {
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: SHEET_CONFIG.spreadsheetId,
+                        range: range,
+                        valueInputOption: 'RAW',
+                        resource: { values: values }
+                    });
+                    return response.result;
+                } catch (error) {
+                    console.error('Error writing to sheet:', error);
+                    throw error;
+                }
+            },
+            
+            // Append data to a sheet
+            appendSheet: async function(range, values) {
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.append({
+                        spreadsheetId: SHEET_CONFIG.spreadsheetId,
+                        range: range,
+                        valueInputOption: 'RAW',
+                        insertDataOption: 'INSERT_ROWS',
+                        resource: { values: values }
+                    });
+                    return response.result;
+                } catch (error) {
+                    console.error('Error appending to sheet:', error);
+                    throw error;
+                }
+            },
+            
+            // Clear a range
+            clearSheet: async function(range) {
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.clear({
+                        spreadsheetId: SHEET_CONFIG.spreadsheetId,
+                        range: range
+                    });
+                    return response.result;
+                } catch (error) {
+                    console.error('Error clearing sheet:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // Load employees from Google Sheets
+        async function loadEmployeesFromSheets() {
+            if (!GoogleSheetsDB.isSignedIn) return;
+            
+            try {
+                showNotification('Loading employees from Google Sheets...');
+                const data = await GoogleSheetsDB.readSheet('Employees!A2:D');
+                
+                if (data.length > 0) {
+                    employees.length = 0; // Clear current array
+                    
+                    data.forEach(row => {
+                        if (row[0]) { // If name exists
+                            employees.push({
+                                name: row[0],
+                                role: row[1] || '',
+                                password: row[2] || generatePassword(row[0].split(' ')[0]),
+                                email: row[3] || ''
+                            });
+                        }
+                    });
+                    
+                    console.log('Loaded employees from Google Sheets:', employees.length);
+                    saveEmployeesList(); // Save to localStorage as backup
+                    populateEmployeeGrid();
+                }
+            } catch (error) {
+                console.error('Failed to load employees from Sheets:', error);
+                showNotification('Failed to load from Google Sheets - using local data');
+            }
+        }
+
+        // Save all employees to Google Sheets
+        async function saveEmployeesToSheets() {
+            if (!GoogleSheetsDB.isSignedIn) return;
+            
+            try {
+                // Clear existing data (except header)
+                await GoogleSheetsDB.clearSheet('Employees!A2:D');
+                
+                // Prepare data
+                const values = employees.map(emp => [
+                    emp.name,
+                    emp.role,
+                    emp.password || '',
+                    emp.email || ''
+                ]);
+                
+                // Write new data
+                if (values.length > 0) {
+                    await GoogleSheetsDB.writeSheet('Employees!A2:D', values);
+                    console.log('Employees synced to Google Sheets');
+                }
+            } catch (error) {
+                console.error('Failed to save employees to Sheets:', error);
+            }
+        }
+
+        // Load assessments from Google Sheets
+        async function loadAssessmentsFromSheets() {
+            if (!GoogleSheetsDB.isSignedIn) return;
+            
+            try {
+                showNotification('Loading assessments from Google Sheets...');
+                const data = await GoogleSheetsDB.readSheet('Assessments!A2:G');
+                
+                // Clear current assessment data
+                assessmentData = {};
+                
+                data.forEach(row => {
+                    const [employee, skill, rating, category, date, comment, trainingRequested] = row;
+                    
+                    if (employee && skill && rating) {
+                        if (!assessmentData[employee]) {
+                            assessmentData[employee] = {};
+                        }
+                        assessmentData[employee][skill] = rating;
+                    }
+                });
+                
+                console.log('Loaded assessments from Google Sheets');
+                saveAssessmentData(); // Save to localStorage as backup
+                
+                // Update UI
+                if (supervisorAccess) {
+                    updateAnalytics();
+                }
+                populateEmployeeGrid();
+            } catch (error) {
+                console.error('Failed to load assessments from Sheets:', error);
+            }
+        }
+
+        // Save single assessment to Google Sheets
+        async function saveAssessmentToSheets(employeeName, skill, rating) {
+            if (!GoogleSheetsDB.isSignedIn) return;
+            
+            try {
+                // Find category for this skill
+                let category = '';
+                for (const [cat, skills] of Object.entries(skillsData)) {
+                    if (skills.includes(skill)) {
+                        category = cat;
+                        break;
+                    }
+                }
+                
+                // Check if this assessment already exists
+                const existingData = await GoogleSheetsDB.readSheet('Assessments!A2:G');
+                let rowIndex = -1;
+                
+                for (let i = 0; i < existingData.length; i++) {
+                    if (existingData[i][0] === employeeName && existingData[i][1] === skill) {
+                        rowIndex = i + 2; // +2 because sheet is 1-indexed and we skip header
+                        break;
+                    }
+                }
+                
+                const values = [[
+                    employeeName,
+                    skill,
+                    rating,
+                    category,
+                    new Date().toISOString().split('T')[0],
+                    '', // comment
+                    'FALSE' // training requested
+                ]];
+                
+                if (rowIndex > 0) {
+                    // Update existing row
+                    await GoogleSheetsDB.writeSheet(`Assessments!A${rowIndex}:G${rowIndex}`, values);
+                } else {
+                    // Append new row
+                    await GoogleSheetsDB.appendSheet('Assessments!A:G', values);
+                }
+                
+                console.log('Assessment saved to Google Sheets');
+            } catch (error) {
+                console.error('Failed to save assessment to Sheets:', error);
+            }
+        }
+
+        // Override existing functions to add Google Sheets sync
+        const originalSaveEmployeesList = saveEmployeesList;
+        saveEmployeesList = async function() {
+            originalSaveEmployeesList(); // Save to localStorage
+            await saveEmployeesToSheets(); // Also save to Google Sheets
+        };
+
+        // Override selectRating to save to Sheets
+        const originalSelectRating = selectRating;
+        selectRating = async function(skill, rating) {
+            originalSelectRating(skill, rating); // Original function
+            
+            // Save to Google Sheets if connected
+            if (GoogleSheetsDB.isSignedIn && currentEmployee) {
+                await saveAssessmentToSheets(currentEmployee, skill, rating);
+            }
+        };
+
+        // Add Google Sign-In button to the header
+        function addGoogleSignInButton() {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (navButtons) {
+                const signInBtn = document.createElement('button');
+                signInBtn.id = 'googleSignInBtn';
+                signInBtn.className = 'btn';
+                signInBtn.textContent = 'Enable Sync';
+                signInBtn.style.background = '#4285f4';
+                signInBtn.onclick = function() {
+                    if (GoogleSheetsDB.isSignedIn) {
+                        GoogleSheetsDB.signOut();
+                    } else {
+                        GoogleSheetsDB.signIn();
+                    }
+                };
+                navButtons.appendChild(signInBtn);
+            }
+        }
+
+        // Initialize Google Sheets on page load
+        const originalInitializeApp = initializeApp;
+        initializeApp = async function() {
+            await originalInitializeApp(); // Run original initialization
+            
+            // Add Google sign-in button
+            addGoogleSignInButton();
+            
+            // Initialize Google API
+            if (typeof gapi !== 'undefined') {
+                try {
+                    await GoogleSheetsDB.init();
+                } catch (error) {
+                    console.error('Failed to initialize Google Sheets:', error);
+                    showNotification('Google Sheets integration unavailable - using local storage only');
+                }
+            } else {
+                console.log('Waiting for Google API to load...');
+                // Set up callback for when API loads
+                window.onload = async function() {
+                    if (typeof gapi !== 'undefined') {
+                        try {
+                            await GoogleSheetsDB.init();
+                        } catch (error) {
+                            console.error('Failed to initialize Google Sheets:', error);
+                        }
+                    }
+                };
+            }
+        };
+
         // Initialize the application when page loads
         document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
+
+    <!-- Google API Scripts -->
+    <script async defer src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
 </body>
 </html>
